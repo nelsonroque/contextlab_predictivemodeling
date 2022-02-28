@@ -26,24 +26,23 @@ exp_df <- read_csv("data/exp1.csv")
 
 # PRE-PROCESS DATA ----
 ```{r}
-
-# create additional columns, remove columns
+# reformat datetime
 exp_pp <- exp_df %>%
   filter(!is.na(PARTICIPANT)) %>%
+  mutate(DT_ = anytime::anytime(datetime))
+```
+
+```{r}
+# create additional columns, remove columns
+exp_pp_ = exp_pp %>%
   mutate(is_practice = ifelse(practice == "yes", TRUE, FALSE)) %>%
   mutate(TRIAL = count_trial_sequence) %>%
-  mutate(DT_ = anytime::anytime(datetime))
-
-exp_pp_ = exp_pp %>%
   mutate(DT_DOW = lubridate::wday(DT_),
          DT_DOY = lubridate::yday(DT_),
          DT_HOUR = lubridate::hour(DT_)) %>%
-  select(-condition, -count_trial_sequence, -subject_nr, -response_time_breakscreen, -response_time, -practice) %>%
+  select(-count_trial_sequence, -response_time, -practice) %>%
   select(datetime, contains("DT_"), PARTICIPANT, BLOCK, TRIAL, is_practice, correct, RT, everything()) %>%
   mutate(EXP_BLOCK_RANDOM = ifelse(isRandom == "blocked", FALSE, TRUE))
-
-# load above from URL
-# exp_pp <- read_csv(...) # from url
 ```
 
 ```{r}
