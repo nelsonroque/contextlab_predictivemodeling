@@ -9,12 +9,16 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Overview ----
+
+This is unpublished data shared with students in EXP6541 for the purposes of learning. 
+Do not share or use for any formal projects.
+
 ```{r}
 library(readr)
 library(tidyverse)
-library(equatiomatic)
+#library(equatiomatic)
 library(lme4)
-library()
 ```
 
 # LOAD DATA ----
@@ -100,7 +104,7 @@ fit = lm(mean_rt ~ n_correct, data=part_means_byblock)
 summary(fit)
 
 # show model equation
-extract_eq(fit, use_coefs=TRUE, wrap=TRUE)
+#extract_eq(fit, use_coefs=TRUE, wrap=TRUE)
 ```
 # Run as multilevel model
 ```{r}
