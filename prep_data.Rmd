@@ -128,7 +128,7 @@ anova(fitm_0, fitm_1, fitm_2, fitm_3, fitm_4, fitm_5)
 # create pub-ready table of results
 ```{r}
 
-sjPlot::tab_model(fitm_0, fitm_4, fitm_5)
+sjPlot::tab_model(fitm_0, fitm_5)
 ```
 
 ```{r}
