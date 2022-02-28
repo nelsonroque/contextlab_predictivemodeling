@@ -1,40 +1,61 @@
+---
+title: "Predictive Modeling"
+author: "Nelson Roque"
+date: "2/27/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
 library(readr)
 library(tidyverse)
+library(equatiomatic)
+```
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-# LOAD, PRE-PROCESS DATA ----
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# LOAD DATA ----
+
+```{r}
 
 # load data
-exp_df <- read_csv("NR_Diss_EXP1.csv")
+exp_df <- read_csv("data/exp1.csv")
+
+```
+
+# PRE-PROCESS DATA ----
+```{r}
 
 # create additional columns, remove columns
 exp_pp <- exp_df %>%
   filter(!is.na(PARTICIPANT)) %>%
   mutate(is_practice = ifelse(practice == "yes", TRUE, FALSE)) %>%
   mutate(TRIAL = count_trial_sequence) %>%
-  mutate(DT_ = anytime::anytime(datetime)) %>%
+  mutate(DT_ = anytime::anytime(datetime))
+
+exp_pp_ = exp_pp %>%
   mutate(DT_DOW = lubridate::wday(DT_),
          DT_DOY = lubridate::yday(DT_),
          DT_HOUR = lubridate::hour(DT_)) %>%
   select(-condition, -count_trial_sequence, -subject_nr, -response_time_breakscreen, -response_time, -practice) %>%
-  select(datetime, contains("DT_"), PARTICIPANT, BLOCK, TRIAL, is_practice, correct, RT, everything())
-
-exp_pp_ = exp_pp %>%
+  select(datetime, contains("DT_"), PARTICIPANT, BLOCK, TRIAL, is_practice, correct, RT, everything()) %>%
   mutate(EXP_BLOCK_RANDOM = ifelse(isRandom == "blocked", FALSE, TRUE))
 
 # load above from URL
 # exp_pp <- read_csv(...) # from url
+```
 
+```{r}
 # metadata
 metadata = exp_pp_  %>%
   select(datetime, contains("DT_"), PARTICIPANT, contains("EXP_")) %>%
   distinct()
+```
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 # QUICK SUMMARIES ----
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+```{r}
 # overall means and record count by participant
 part_means = exp_pp_ %>%
   group_by(PARTICIPANT, datetime) %>%
@@ -56,22 +77,25 @@ part_means_byblock = exp_pp_ %>%
             n_correct = sum(correct),
             n = n()) %>%
   inner_join(metadata)
+```
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 # QUICK VIZ ----
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+```{r}
 ggplot(part_means_byblock %>% filter(!is_practice), aes(BLOCK, mean_rt, group=BLOCK, color=EXP_BLOCK_RANDOM)) + 
   geom_boxplot() +
   facet_grid(. ~ EXP_BLOCK_RANDOM) +
   theme_bw() +
   labs(x= "Experiment Block", y = "Mean Response Time (ms)")
+```
 
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 # PREDICTIVE MODELING ----
-# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
-library(equatiomatic)
+```{r}
 fit = lm(mean_rt ~ BLOCK, data=part_means_byblock)
 summary(fit)
-extract_eq(fit, use_coefs=TRUE)
+extract_eq(fit, use_coefs=TRUE, wrap=TRUE)
+
+fit_mlm  = lme4::lmer(mean_rt ~ 1 + (1|PARTICIPANT),
+                      data=exp_pp_)
+```
